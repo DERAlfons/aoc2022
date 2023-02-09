@@ -21,12 +21,14 @@ executable aoc2022
   
   other-modules:
     Day1.Main
+    RefList
     Paths_aoc2022
   autogen-modules:
     Paths_aoc2022
 
   build-depends:
-    base >= 4.14 && < 4.15
+    base >= 4.14 && < 4.15,
+    template-haskell
 
   default-language: Haskell2010
 
@@ -36,11 +38,13 @@ test-suite test-day1
   
   other-modules:
     Day1.Main
+    RefList
     Paths_aoc2022
   autogen-modules:
     Paths_aoc2022
 
   build-depends:
-    base >= 4.14 && < 4.15
+    base >= 4.14 && < 4.15,
+    template-haskell
 
   default-language: Haskell2010  
