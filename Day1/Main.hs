@@ -1,4 +1,5 @@
 module Day1.Main (
+    main,
     answer1,
     answer2)
 where
