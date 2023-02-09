@@ -1,0 +1,45 @@
+cabal-version: >= 1.10
+
+name:           aoc2022
+version:        0.0.0.1
+category:       Misc
+synopsis:       Advent of Code 2022 solutions
+author:         Jascha Bakarinow
+maintainer:     jascha-bakarinow@web.de
+copyright:      Copyright (c) 2022 - 2023 Jascha Bakarinow
+license:        GPL-3.0-or-later
+license-file:   LICENSE.md
+description:
+  Solutions to the Advent of Code 2022 coding challenges with my personal commentary
+
+build-type: Simple
+
+data-files: **/*.txt
+
+executable aoc2022
+  main-is: Main.hs
+  
+  other-modules:
+    Paths_aoc2022
+  autogen-modules:
+    Paths_aoc2022
+
+  build-depends:
+    base >= 4.14 && < 4.15
+
+  default-language: Haskell2010
+
+test-suite test-day1
+  type: exitcode-stdio-1.0
+  main-is: Day1/Test.hs
+  
+  other-modules:
+    Paths_aoc2022
+    Day1.Main
+  autogen-modules:
+    Paths_aoc2022
+
+  build-depends:
+    base >= 4.14 && < 4.15
+
+  default-language: Haskell2010  

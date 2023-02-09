@@ -1,0 +1,5 @@
+# Output of cabal configure
+/cabal.project.local
+
+# build
+/dist-newstyle
