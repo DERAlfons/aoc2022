@@ -1,32 +1,14 @@
-module Day1.Main (
-    main,
-    answer1,
-    answer2)
-where
+module Day1.Main (main) where
 
-import Data.List (sort)
-import My.Util (explode)
-
-getCalories :: String -> [Int]
-getCalories = map (sum . map read) . explode [] . lines
-
-answer1 :: String -> String
-answer1 input =
-    let calories = getCalories input
-        maxCals = maximum calories in
-    show maxCals
-
-answer2 :: String -> String
-answer2 input =
-    let calories = getCalories input
-        max3Cals = sum $ take 3 $ reverse $ sort calories in
-    show max3Cals
+import My.Util (explode, sortDesc)
 
 main :: IO (String, String)
 main = do
-    input <- readFile "Day1/input.txt"
+    calories <- map (sum . map read) . explode [] . lines <$> readFile "Day1/input.txt" :: IO [Int]
+    let maxCals = maximum calories
+        max3Cals = sum $ take 3 $ sortDesc calories
     putStr "Maximum calories: "
-    putStrLn $ answer1 input
+    print maxCals
     putStr "Calories of top 3 elves: "
-    putStrLn $ answer2 input
-    return (answer1 input, answer2 input)
+    print max3Cals
+    return (show maxCals, show max3Cals)
