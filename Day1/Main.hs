@@ -5,15 +5,7 @@ module Day1.Main (
 where
 
 import Data.List (sort)
-
-explode :: Eq a => a -> [a] -> [[a]]
-explode _ [] = []
-explode sep lst =
-    let elm = takeWhile (/= sep) lst
-        rst = dropWhile (/= sep) lst
-    in case rst of
-        [] -> [elm]
-        (_ : rst2) -> elm : (explode sep rst2)
+import My.Util (explode)
 
 getCalories :: String -> [Int]
 getCalories = map (sum . map read) . explode [] . lines
