@@ -30,11 +30,11 @@ answer2 input =
         max3Cals = sum $ take 3 $ reverse $ sort calories in
     show max3Cals
 
-main :: IO ()
+main :: IO (String, String)
 main = do
     input <- readFile "Day1/input.txt"
-    putStrLn "Maximum calories:"
+    putStr "Maximum calories: "
     putStrLn $ answer1 input
-    putStrLn "Calories of top 3 elves:"
+    putStr "Calories of top 3 elves: "
     putStrLn $ answer2 input
-    return ()
+    return (answer1 input, answer2 input)
