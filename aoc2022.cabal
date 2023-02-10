@@ -16,13 +16,14 @@ build-type: Simple
 
 data-files: **/*.txt
 
-test-suite test-day1
+test-suite test
   type: exitcode-stdio-1.0
-  main-is: Day1/Test.hs
-  
+
+  main-is: Test.hs
+
   other-modules:
-    Day1.Main
-    RefList
+    Day1.Main,
+    RefList,
     Paths_aoc2022
   autogen-modules:
     Paths_aoc2022
