@@ -4,8 +4,6 @@ module Day1.Main (
     answer2)
 where
 
-import Paths_aoc2022 (getDataFileName)
-
 import Data.List (sort)
 
 explode :: Eq a => a -> [a] -> [[a]]
@@ -34,7 +32,7 @@ answer2 input =
 
 main :: IO ()
 main = do
-    input <- getDataFileName "Day1/input.txt" >>= readFile
+    input <- readFile "Day1/input.txt"
     putStrLn "Maximum calories:"
     putStrLn $ answer1 input
     putStrLn "Calories of top 3 elves:"

@@ -14,8 +14,6 @@ description:
 
 build-type: Simple
 
-data-files: **/*.txt
-
 test-suite test
   type: exitcode-stdio-1.0
 
@@ -23,10 +21,7 @@ test-suite test
 
   other-modules:
     Day1.Main,
-    RefList,
-    Paths_aoc2022
-  autogen-modules:
-    Paths_aoc2022
+    RefList
 
   build-depends:
     base >= 4.14 && < 4.15,
