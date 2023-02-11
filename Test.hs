@@ -1,14 +1,28 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Main where
 
-import System.Exit (exitFailure)
+import System.FilePath ((</>))
+import System.Exit (exitSuccess, exitFailure)
 
-import Day1.Main (answer1, answer2)
+import GenMains (genMains)
+
+import qualified Day1.Main
+
+mains :: [(String, IO (String, String))]
+mains = $genMains
 
 main :: IO ()
-main = do
-    input <- readFile "Day1/input.txt"
-    [a1, a2] <- lines <$> readFile "Day1/answer.txt"
-    if answer1 input == a1 && answer2 input == a2 then
-        return ()
+main = do -- IO
+    results <- sequence $ do -- []
+        (day, m) <- mains
+        return $ do -- IO
+            (answer1, answer2) <- m
+            [check1, check2] <- lines <$> readFile (day </> "check.txt")
+            putStrLn $ day ++ " part 1: " ++ if answer1 == check1 then "SUCCESS" else "FAILURE"
+            putStrLn $ day ++ " part 2: " ++ if answer2 == check2 then "SUCCESS" else "FAILURE"
+            return $ answer1 == check1 && answer2 == check2
+    if and results then
+        exitSuccess
     else
         exitFailure
