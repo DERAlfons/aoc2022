@@ -2,6 +2,7 @@
 
 module Main where
 
+import System.Environment (getArgs)
 import System.FilePath ((</>))
 import System.Exit (exitSuccess, exitFailure)
 
@@ -14,8 +15,12 @@ mains = $genMains
 
 main :: IO ()
 main = do -- IO
+    args <- getArgs
+    let testMains = case args of
+            [] -> mains
+            otherwise -> filter ((`elem` args) . fst) mains
     results <- sequence $ do -- []
-        (day, m) <- mains
+        (day, m) <- testMains
         return $ do -- IO
             (answer1, answer2) <- m
             [check1, check2] <- lines <$> readFile (day </> "check.txt")
