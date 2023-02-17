@@ -9,6 +9,7 @@ import System.Exit (exitSuccess, exitFailure)
 import GenMains (genMains)
 
 import qualified Day1.Main
+import qualified Day2.Main
 
 mains :: [(String, IO (String, String))]
 mains = $genMains
