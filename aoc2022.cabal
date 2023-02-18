@@ -23,7 +23,8 @@ test-suite test
     GenMains,
     Day1.Main,
     Day2.Main,
-    Day3.Main
+    Day3.Main,
+    Day4.Main
 
   build-depends:
     base >= 4.14 && < 4.15,
