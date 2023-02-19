@@ -25,11 +25,13 @@ test-suite test
     Day2.Main,
     Day3.Main,
     Day4.Main,
-    Day5.Main
+    Day5.Main,
+    Day5v2.Main
 
   build-depends:
     base >= 4.14 && < 4.15,
     containers,
+    array,
     filepath,
     template-haskell,
     my >= 0.0 && < 0.1,
