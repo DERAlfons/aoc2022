@@ -1,29 +1,36 @@
 module Day6.Main (main) where
 
-import Data.List
+import Data.List (nub)
 
-getMarkerOffset :: Int -> String -> Int
-getMarkerOffset markerLength s =
-    let (initSegment, restS) = splitAt markerLength s
-    in loop markerLength initSegment restS
+import My.Util (maybeToIO)
+
+distinct :: Eq a => [a] -> Bool
+distinct bs = length (nub bs) == length bs
+
+getMarkerOffset :: Int -> String -> Maybe Int
+getMarkerOffset markerLength stream = (+ markerLength) <$> loop 0 stream
     where
-    loop i segment rest
-        | length (nub segment) == markerLength = i
-        | otherwise = loop (i + 1) ((tail segment) ++ [head rest]) (tail rest)
+    loop i s
+        | length s < markerLength = Nothing
+        | distinct (take markerLength s) = Just i
+        | otherwise = loop (i + 1) (tail s)
 
-getPacketOffset :: String -> Int
+getPacketOffset :: String -> Maybe Int
 getPacketOffset = getMarkerOffset 4
 
-getMsgOffset :: String -> Int
+getMsgOffset :: String -> Maybe Int
 getMsgOffset = getMarkerOffset 14
 
 main :: IO (String, String)
 main = do
     buffer <- readFile "Day6/input.txt"
-    let packetOffset = getPacketOffset buffer
-    putStrLn "Packet offset:"
-    putStrLn $ show packetOffset
-    let msgOffset = getMsgOffset buffer
-    putStrLn "Msg offset:"
-    putStrLn $ show msgOffset
+
+    packetOffset <- maybeToIO "No packet found" $ getPacketOffset buffer
+    putStr "Packet offset: "
+    print packetOffset
+
+    msgOffset <- maybeToIO "No msg found" $ getMsgOffset buffer
+    putStr "Msg offset: "
+    print msgOffset
+
     return (show packetOffset, show msgOffset)
