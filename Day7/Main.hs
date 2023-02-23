@@ -1,28 +1,20 @@
 module Day7.Main (main) where
 
-import My.Parser (parserRegex, run)
+import Data.List (isPrefixOf)
 import Data.Maybe (maybeToList)
 import Data.Foldable (asum)
 
-data Log = Cd String | Fn String Int | Up
+import My.Util (maybeToIO)
+import My.Parser (Parser, parserRegex, parserList, run)
+
 data File = File String Int | Dir String [File]
 
-parseDir :: [Log] -> String -> [File] -> (File, [Log])
-parseDir [] dirName fileList = (Dir dirName fileList, [])
-parseDir (Up : log) dirName fileList = (Dir dirName fileList, log)
-parseDir (Fn fileName fileSize : log) dirName fileList = parseDir log dirName (File fileName fileSize : fileList)
-parseDir (Cd dir : log) dirName fileList =
-    let (file, rest) = parseDir log dir []
-    in parseDir rest dirName (file : fileList)
-
-parse :: [Log] -> File
-parse (Cd rootDir : log) = fst $ parseDir log rootDir []
-
-parseLine :: String -> Maybe Log
-parseLine = run $ asum [
-    parserRegex "^\\$ cd \\.\\.$" $ \[] -> Up,
-    parserRegex "^\\$ cd (.*)$" $ \[dirName] -> Cd dirName,
-    parserRegex "^([0-9]+) (.*)$" $ \[sz, fn] -> Fn fn (read sz)]
+parseDir :: Parser File
+parseDir = Dir <$>
+    parserRegex "\\$ cd (.+)\\n" head <*>
+    parserList "\\$ ls\\n" "" "(\\$ cd \\.\\.\\n)|$" (asum [
+        parserRegex "(\\d+) (.+)\\n" $ \[sz, fn] -> File fn (read sz),
+        parseDir])
 
 size :: File -> Int
 size (File _ sz) = sz
@@ -30,16 +22,22 @@ size (Dir _ fs) = sum $ map size fs
 
 dirs :: File -> [File]
 dirs (File _ _) = []
-dirs d @ (Dir _ fs) = d : (foldr (++) [] $ map dirs fs)
+dirs d @ (Dir _ fs) = d : (dirs =<< fs)
 
 main :: IO (String, String)
 main = do
-    log <- (maybeToList . parseLine =<<) . lines <$> readFile "Day7/input.txt"
-    let fileSystem = parse log
-        dirSizes = map size $ dirs fileSystem
-    putStrLn "Sum of sizes of small directories:"
-    putStrLn $ show $ sum $ filter (<= 100000) $ dirSizes
-    let delete = size fileSystem - 40000000
-    putStrLn "Size of smallest directory, whose deletion frees up enough space:"
-    putStrLn $ show $ minimum $ filter (>= delete) dirSizes
-    return (show $ sum $ filter (<= 100000) $ dirSizes, show $ minimum $ filter (>= delete) dirSizes)
+    log <- unlines . filter (not . ("dir" `isPrefixOf`)) . lines <$>
+        readFile "Day7/input.txt"
+    fileSystem <- maybeToIO "error parsing file system log" $ run parseDir log
+    let dirSizes = map size $ dirs fileSystem
+
+    let smallDirs = sum $ filter (<= 100000) dirSizes
+    putStr "Sum of sizes of small directories: "
+    print smallDirs
+
+    let deleteSize = size fileSystem - 40000000
+        deleteDir = minimum $ filter (>= deleteSize) dirSizes
+    putStr "Size of smallest directory, where deletion frees up enough space: "
+    print deleteDir
+
+    return (show smallDirs, show deleteDir)
