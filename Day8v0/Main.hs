@@ -2,21 +2,26 @@
 
 module Day8v0.Main (main) where
 
-import Foreign.C.Types
-import Foreign.Ptr
-import Foreign.Marshal.Array
+import Foreign.C.Types (CInt (..))
+import Foreign.Ptr (Ptr)
+import Foreign.Marshal.Array (newArray)
 
-foreign import capi "vis.h vis_count" vis_count :: Ptr CInt -> CInt -> CInt -> CInt
-foreign import capi "vis.h max_scenic_score" max_scenic_score :: Ptr CInt -> CInt -> CInt -> CInt
+foreign import capi "lines_of_sight.h countVisibleTrees" countVisibleTrees :: Ptr CInt -> CInt -> CInt -> CInt
+foreign import capi "lines_of_sight.h getMaxScenicScore" getMaxScenicScore :: Ptr CInt -> CInt -> CInt -> CInt
 
 main :: IO (String, String)
 main = do
-    trees <- map (map (read . return)) <$> lines <$> readFile "Day8v0/input.txt"
+    trees <- map (map (read . return)) . lines <$> readFile "Day8v0/input.txt"
+    pTrees <- newArray $ concat trees
     let height = fromIntegral $ length trees
         width = fromIntegral $ length $ head trees
-    ptrees <- newArray $ concat trees
-    putStrLn "Visible trees:"
-    putStrLn $ show $ vis_count ptrees height width
-    putStrLn "Maximum scenic score:"
-    putStrLn $ show $ max_scenic_score ptrees height width
-    return (show $ vis_count ptrees height width, show $ max_scenic_score ptrees height width)
+
+    let visibleTrees = countVisibleTrees pTrees height width
+    putStr "Visible trees: "
+    print visibleTrees
+
+    let maxScenicScore = getMaxScenicScore pTrees height width
+    putStr "Maximum scenic score: "
+    print maxScenicScore
+
+    return (show visibleTrees, show maxScenicScore)

@@ -11,8 +11,8 @@ takeUntil f (b : bs)
     | f b = [b]
     | otherwise = b : (takeUntil f bs)
 
-mapWithSightLines :: (Int -> [[Int]] -> a) -> [[Int]] -> [[a]]
-mapWithSightLines f trees = do
+mapWithLinesOfSight :: (Int -> [[Int]] -> a) -> [[Int]] -> [[a]]
+mapWithLinesOfSight f trees = do
     (i, row) <- zip [0 ..] trees
     return $ do
         (j, size) <- zip [0 ..] row
@@ -24,12 +24,12 @@ mapWithSightLines f trees = do
             drop (i + 1) col]
 
 visibilities :: [[Int]] -> [[Bool]]
-visibilities = mapWithSightLines $ \size sightLines ->
-    any (all (< size)) sightLines
+visibilities = mapWithLinesOfSight $ \size linesOfSight ->
+    any (all (< size)) linesOfSight
 
 scenicScores :: [[Int]] -> [[Int]]
-scenicScores =  mapWithSightLines $ \size sightLines ->
-    product $ map (length . takeUntil (>= size)) sightLines
+scenicScores =  mapWithLinesOfSight $ \size linesOfSight ->
+    product $ map (length . takeUntil (>= size)) linesOfSight
 
 main :: IO (String, String)
 main = do

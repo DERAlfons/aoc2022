@@ -15,8 +15,8 @@ description:
 build-type: Simple
 
 extra-source-files:
-  Day8v0/vis.h,
-  Day8v0/vis.c
+  Day8v0/lines_of_sight.h,
+  Day8v0/lines_of_sight.c
 
 test-suite test
   type: exitcode-stdio-1.0
@@ -46,7 +46,7 @@ test-suite test
     regex-pcre-builtin
 
   default-language: Haskell2010
-  
-  includes: Day8v0/vis.h
-  
-  c-sources: Day8v0/vis.c
+
+  includes: Day8v0/lines_of_sight.h
+
+  c-sources: Day8v0/lines_of_sight.c
