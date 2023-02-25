@@ -1,4 +1,4 @@
-module Day5.Main (main) where
+module Day05.Main (main) where
 
 import Data.List (transpose, foldl')
 import Data.Map (Map, fromList, (!), adjust, toAscList)
@@ -27,7 +27,7 @@ parseInstruction = run $ parserRegex
 
 main :: IO (String, String)
 main = do
-    [sCrates, sInstructions] <- explode "" . lines <$> readFile "Day5/input.txt"
+    [sCrates, sInstructions] <- explode "" . lines <$> readFile "Day05/input.txt"
     let startCrateStacks = fromList $ map toStack $
             filter ((`elem` ['1' .. '9']) . head) $
             transpose $ reverse sCrates

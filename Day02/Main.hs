@@ -1,4 +1,4 @@
-module Day2.Main (main) where
+module Day02.Main (main) where
 
 import Data.Char (ord)
 
@@ -41,7 +41,7 @@ lose rps = toEnum $ (fromEnum rps - 1) `mod` 3
 
 main :: IO (String, String)
 main = do
-    instructions <- map (map head . words) . lines <$> readFile "Day2/input.txt"
+    instructions <- map (map head . words) . lines <$> readFile "Day02/input.txt"
 
     let strategy1 = map parseMatch1 instructions
         score1 = sum $ map (\(rps1, rps2) -> points rps2 rps1) strategy1

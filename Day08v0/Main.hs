@@ -1,6 +1,6 @@
 {-# LANGUAGE CApiFFI #-}
 
-module Day8v0.Main (main) where
+module Day08v0.Main (main) where
 
 import Foreign.C.Types (CInt (..))
 import Foreign.Ptr (Ptr)
@@ -11,7 +11,7 @@ foreign import capi "lines_of_sight.h getMaxScenicScore" getMaxScenicScore :: Pt
 
 main :: IO (String, String)
 main = do
-    trees <- map (map (read . return)) . lines <$> readFile "Day8v0/input.txt"
+    trees <- map (map (read . return)) . lines <$> readFile "Day08v0/input.txt"
     pTrees <- newArray $ concat trees
     let height = fromIntegral $ length trees
         width = fromIntegral $ length $ head trees

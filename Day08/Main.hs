@@ -1,4 +1,4 @@
-module Day8.Main (main) where
+module Day08.Main (main) where
 
 import Data.List (transpose)
 import Control.Monad (guard)
@@ -33,7 +33,7 @@ scenicScores =  mapWithLinesOfSight $ \size linesOfSight ->
 
 main :: IO (String, String)
 main = do
-    trees <- map (map (read . return)) . lines <$> readFile "Day8/input.txt"
+    trees <- map (map (read . return)) . lines <$> readFile "Day08/input.txt"
 
     let visibleTrees = count (== True) $ concat $ visibilities trees
     putStr "Visible trees: "

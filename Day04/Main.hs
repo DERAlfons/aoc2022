@@ -1,4 +1,4 @@
-module Day4.Main (main) where
+module Day04.Main (main) where
 
 import Data.Maybe (maybeToList)
 
@@ -22,7 +22,7 @@ parseRanges = run $ parserRegex
 
 main :: IO (String, String)
 main = do
-    rangePairs <- concat . map (maybeToList . parseRanges) . lines <$> readFile "Day4/input.txt"
+    rangePairs <- concat . map (maybeToList . parseRanges) . lines <$> readFile "Day04/input.txt"
 
     let containedCount = count (uncurry contains) rangePairs
     putStr "Number of pairs with fully contained area: "

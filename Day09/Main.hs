@@ -1,8 +1,6 @@
-module Day9.Main (main) where
+module Day09.Main (main) where
 
 import Data.List (scanl', nub)
-
-import My.Util (explode)
 
 type Point = (Int, Int)
 
@@ -24,12 +22,12 @@ update (pH : pTs) direction = scanl' follow (step direction pH) pTs
 
 parseInstruction :: String -> [Char]
 parseInstruction s =
-    let [[direction], count] = explode ' ' s in
+    let [[direction], count] = words s in
     replicate (read count) direction
 
 main :: IO (String, String)
 main = do
-    instructions <- (parseInstruction =<<) . lines <$> readFile "Day9/input.txt"
+    instructions <- (parseInstruction =<<) . lines <$> readFile "Day09/input.txt"
 
     let ropePositions2 = scanl' update (replicate 2 (0, 0)) instructions
         lastKnotPosCount2 = length $ nub $ map last ropePositions2

@@ -1,4 +1,4 @@
-module Day3.Main (main) where
+module Day03.Main (main) where
 
 import Data.List (intersect, foldl1')
 import Data.Char (ord)
@@ -12,7 +12,7 @@ prio c
 
 main :: IO (String, String)
 main = do
-    rucksacks <- lines <$> readFile "Day3/input.txt"
+    rucksacks <- lines <$> readFile "Day03/input.txt"
 
     let compartments = map (\x -> splitAt ((length x) `div` 2) x) rucksacks
         wrongItems = map (head . uncurry intersect) compartments

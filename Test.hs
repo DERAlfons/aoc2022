@@ -8,17 +8,17 @@ import System.Exit (exitSuccess, exitFailure)
 
 import GenMains (genMains)
 
-import qualified Day1.Main
-import qualified Day2.Main
-import qualified Day3.Main
-import qualified Day4.Main
-import qualified Day5.Main
-import qualified Day5v2.Main
-import qualified Day6.Main
-import qualified Day7.Main
-import qualified Day8.Main
-import qualified Day8v0.Main
-import qualified Day9.Main
+import qualified Day01.Main
+import qualified Day02.Main
+import qualified Day03.Main
+import qualified Day04.Main
+import qualified Day05.Main
+import qualified Day05v2.Main
+import qualified Day06.Main
+import qualified Day07.Main
+import qualified Day08.Main
+import qualified Day08v0.Main
+import qualified Day09.Main
 import qualified Day10.Main
 
 mains :: [(String, IO (String, String))]

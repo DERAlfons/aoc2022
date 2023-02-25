@@ -1,4 +1,4 @@
-module Day7.Main (main) where
+module Day07.Main (main) where
 
 import Data.List (isPrefixOf)
 import Data.Maybe (maybeToList)
@@ -27,7 +27,7 @@ dirs d @ (Dir _ fs) = d : (dirs =<< fs)
 main :: IO (String, String)
 main = do
     log <- unlines . filter (not . ("dir" `isPrefixOf`)) . lines <$>
-        readFile "Day7/input.txt"
+        readFile "Day07/input.txt"
     fileSystem <- maybeToIO "error parsing file system log" $ run parseDir log
     let dirSizes = map size $ dirs fileSystem
 

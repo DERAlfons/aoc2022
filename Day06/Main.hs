@@ -1,4 +1,4 @@
-module Day6.Main (main) where
+module Day06.Main (main) where
 
 import Data.List (nub)
 
@@ -23,7 +23,7 @@ getMsgOffset = getMarkerOffset 14
 
 main :: IO (String, String)
 main = do
-    buffer <- readFile "Day6/input.txt"
+    buffer <- readFile "Day06/input.txt"
 
     packetOffset <- maybeToIO "No packet found" $ getPacketOffset buffer
     putStr "Packet offset: "
