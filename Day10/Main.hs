@@ -7,14 +7,14 @@ import Data.Foldable (asum)
 import My.Util (groupsOf)
 import My.Parser (parserRegex, run)
 
-parse :: String -> Maybe [Int -> Int]
-parse = run $ asum [
+parseInstruction :: String -> Maybe [Int -> Int]
+parseInstruction = run $ asum [
     parserRegex "noop" $ \[] -> [id],
     parserRegex "addx (-?\\d+)" $ \[x] -> [id, (+ (read x))]]
 
 main :: IO (String, String)
 main = do
-    instructions <- (concat . maybeToList . parse =<<) . lines <$>
+    instructions <- concat . (maybeToList . parseInstruction =<<) . lines <$>
         readFile "Day10/input.txt"
     let xReg = scanl' (flip ($)) 1 instructions
 
