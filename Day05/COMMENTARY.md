@@ -2,7 +2,7 @@
 
 [Puzzle text](https://adventofcode.com/2022/day/5)
 
-[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day5/Main.hs)
+[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day05/Main.hs)
 
 The task of the fifth day was in essence to move elements between lists.
 
@@ -17,4 +17,4 @@ But the actual reason i used `Map` here is, that i am more familiar with it than
 mutable arrays.
 
 P. S.: I ended up also implementing a solution using a mutable array, which can be found
-[here](https://github.com/DERAlfons/aoc2022/blob/master/Day5v2/Main.hs)
+[here](https://github.com/DERAlfons/aoc2022/blob/master/Day05v2/Main.hs)

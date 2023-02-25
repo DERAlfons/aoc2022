@@ -2,7 +2,7 @@
 
 [Puzzle text](https://adventofcode.com/2022/day/6)
 
-[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day6/Main.hs)
+[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day06/Main.hs)
 
 The sixth day's task was to find substrings with distinct characters in a string.
 

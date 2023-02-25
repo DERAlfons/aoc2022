@@ -2,7 +2,7 @@
 
 [Puzzle text](https://adventofcode.com/2022/day/8)
 
-[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day8/Main.hs)
+[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day08/Main.hs)
 
 The task on the eighth day day was to do some calculations regarding the visibility of trees on a
 given height map of trees.
@@ -20,4 +20,4 @@ indexing on the lists, and used a wild combination of `zip`s and `unzip`s to cre
 two line solution, which was all but totally unreadable. Finally, i settled with a solution which
 had a few more lines, but which i found to be very concise and readable.
 
-[Here](https://github.com/DERAlfons/aoc2022/blob/master/Day8v0) is my initial Haskell + C code.
+[Here](https://github.com/DERAlfons/aoc2022/blob/master/Day08v0) is my initial Haskell + C code.

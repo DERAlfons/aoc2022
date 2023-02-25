@@ -2,7 +2,7 @@
 
 [Puzzle text](https://adventofcode.com/2022/day/3)
 
-[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day3/Main.hs)
+[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day03/Main.hs)
 
 The third day's task was essentially to find the elements, which all lists in a given
 set of lists have in common. My solution to that was pretty much straight forward.

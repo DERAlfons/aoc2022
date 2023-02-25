@@ -2,7 +2,7 @@
 
 [Puzzle text](https://adventofcode.com/2022/day/2)
 
-[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day2/Main.hs)
+[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day02/Main.hs)
 
 The task of the second day was to evaluate some Rock Paper Scissors matches.
 

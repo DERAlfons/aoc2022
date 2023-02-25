@@ -2,7 +2,7 @@
 
 [Puzzle text](https://adventofcode.com/2022/day/9)
 
-[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day9/Main.hs)
+[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day09/Main.hs)
 
 The ninth day's task was to in essence to simulate the movement of a rope, where the movement of
 one end of the rope was given and the rest of the rope followed that end according to some rules.

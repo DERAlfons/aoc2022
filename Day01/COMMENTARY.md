@@ -2,7 +2,7 @@
 
 [Puzzle text](https://adventofcode.com/2022/day/1)
 
-[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day1/Main.hs)
+[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day01/Main.hs)
 
 On the first day, the task was to find maximal values in a list of numbers.
 Although a fairly simple task, there are already a few interesting things to consider.

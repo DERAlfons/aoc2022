@@ -2,7 +2,7 @@
 
 [Puzzle text](https://adventofcode.com/2022/day/4)
 
-[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day4/Main.hs)
+[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day04/Main.hs)
 
 On the fourth day, the task was to find intersections between pairs of integer ranges.
 

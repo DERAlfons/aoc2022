@@ -2,7 +2,7 @@
 
 [Puzzle text](https://adventofcode.com/2022/day/7)
 
-[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day7/Main.hs)
+[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day07/Main.hs)
 
 On the seventh day, the task was essentially to recreate a file system tree from a commmand line
 session log.
