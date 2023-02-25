@@ -1,5 +1,6 @@
 module Day10.Main (main) where
 
+import Data.Function ((&))
 import Data.List (scanl')
 import Data.Maybe (maybeToList)
 import Data.Foldable (asum)
@@ -16,7 +17,7 @@ main :: IO (String, String)
 main = do
     instructions <- concat . (maybeToList . parseInstruction =<<) . lines <$>
         readFile "Day10/input.txt"
-    let xReg = scanl' (flip ($)) 1 instructions
+    let xReg = scanl' (&) 1 instructions
 
     let signal = zipWith (*) [1 ..] xReg
         result = sum $ map (signal !!) [19, 59 .. 219]
