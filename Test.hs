@@ -21,6 +21,7 @@ import qualified Day08v0.Main
 import qualified Day09.Main
 import qualified Day10.Main
 import qualified Day11.Main
+import qualified Day12.Main
 
 mains :: [(String, IO (String, String))]
 mains = $genMains
