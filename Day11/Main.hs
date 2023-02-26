@@ -1,108 +1,82 @@
-{-# LANGUAGE MultiWayIf #-}
-
 module Day11.Main (main) where
 
-import Data.List
+import Data.Function ((&))
+import Data.List (foldl', foldl1', partition)
 import Data.Maybe (fromJust)
+import Data.Map (Map, fromList, (!), size, insert, adjust, elems)
 
-import My.Parser (parserRegex)
-import qualified My.Parser as P
+import My.Util (maybeToIO, sortDesc)
+import My.Parser (Parser, parserRegex, parserList, run)
 
-explode :: Eq a => a -> [a] -> [[a]]
-explode _ [] = []
-explode sep lst =
-    let elm = takeWhile (/= sep) lst
-        rst = dropWhile (/= sep) lst
-    in case rst of
-        [] -> [elm]
-        (_ : rst2) -> elm : (explode sep rst2)
+data Monkey = Monkey {
+    inspectionCount :: Int,
+    items :: [Int],
+    updateWorry :: Int -> Int,
+    checkM :: Int,
+    dstTrue :: Int,
+    dstFalse :: Int}
 
-updateC :: ([Int], [[Int]]) -> (Int, (Int -> Int, Int -> Bool, Int, Int)) -> ([Int], [[Int]])
-updateC (mCount, mItems) monkey @ (i, _) = (
-    do
-        (ci, cn) <- zip [0 ..] mCount
-        return $ if ci == i
-            then cn + length (mItems !! i)
-            else cn,
-    update mItems monkey)
+addItems :: [Int] -> Monkey -> Monkey
+addItems newItems monkey =
+    let oldItems = items monkey in
+    monkey {items = oldItems ++ newItems}
 
-update :: [[Int]] -> (Int, (Int -> Int, Int -> Bool, Int, Int)) -> [[Int]]
-update mItems (this, (worry, check, left, right)) =
-    let items = mItems !! this
-        newItems = map worry items
-        (leftItems, rightItems) = partition check newItems
-    in do
-        (i, oldItems) <- zip [0 ..] mItems
-        return $ if
-            | i == this -> []
-            | i == left -> oldItems ++ leftItems
-            | i == right -> oldItems ++ rightItems
-            | otherwise -> oldItems
+turn :: (Int -> Int) -> Map Int Monkey -> Int -> Map Int Monkey
+turn reduceWorry monkeys i =
+    let m = monkeys ! i
+        inspectedItems = map (reduceWorry . updateWorry m) (items m)
+        newInspectionCount = inspectionCount m + length inspectedItems
+        (trueItems, falseItems) = partition (\x -> x `mod` checkM m == 0)
+            inspectedItems in
+    foldl' (&) monkeys [
+        insert i m {inspectionCount = newInspectionCount, items = []},
+        adjust (addItems trueItems) (dstTrue m),
+        adjust (addItems falseItems) (dstFalse m)]
 
-run :: [(Int -> Int, Int -> Bool, Int, Int)] -> [[Int]] -> [[Int]]
-run monkeys mItems = foldl' update mItems $ zip [0 ..] monkeys
+round1 :: Map Int Monkey -> Map Int Monkey
+round1 monkeys = foldl' (turn (`div` 3)) monkeys [0 .. size monkeys - 1]
 
-runC :: [(Int -> Int, Int -> Bool, Int, Int)] -> ([Int], [[Int]]) -> ([Int], [[Int]])
-runC monkeys mItemsC = foldl' updateC mItemsC $ zip [0 ..] monkeys
+round2 :: Int -> Map Int Monkey -> Map Int Monkey
+round2 modulus monkeys = foldl' (turn (`mod` modulus)) monkeys
+    [0 .. size monkeys - 1]
 
-parseItems :: String -> [Int]
-parseItems = (fromJust .) $ P.run $ parserRegex "  Starting items: (.*)" $
-    \[s] -> read $ "[" ++ s ++ "]"
+parserMonkey :: Parser Monkey
+parserMonkey = Monkey 0 <$>
+    parserList "\\s*Starting items: " ", " "\\n" (
+        parserRegex "(\\d+)" $ \[n] -> read n) <*>
+    parserRegex "\\s*Operation: new = old (.) (.+)\\n" (
+        \[op, arg] -> case (op, arg) of
+            ("*", "old") -> (^ 2)
+            ("*", v) -> (* read v)
+            ("+", v) -> (+ read v)) <*>
+    parserRegex "\\s*Test: divisible by (\\d+)\\n" (
+        \[n] -> read n) <*>
+    parserRegex "\\s*If true: throw to monkey (\\d+)\\n" (
+        \[i] -> read i) <*>
+    parserRegex "\\s*If false: throw to monkey (\\d+)\\n" (
+        \[i] -> read i)
 
-parseWorry1 :: String -> (Int -> Int)
-parseWorry1 = (fromJust .) $ P.run $ parserRegex "  Operation: new = old (.) (.*)" $
-    \[op, arg] ->
-        (\x ->
-            (`div` 3) $
-            (case op of
-                "+" -> (+)
-                "*" -> (*))
-            (case arg of
-                "old" -> x
-                n -> read n :: Int)
-            x)
-
-parseWorry2 :: String -> (Int -> Int)
-parseWorry2 = (fromJust .) $ P.run $ parserRegex "  Operation: new = old (.) (.*)" $
-    \[op, arg] ->
-        (\x ->
-            (`mod` (2 * 3 * 5 * 7 * 11 * 13 * 17 * 19)) $
-            (case op of
-                "+" -> (+)
-                "*" -> (*))
-            (case arg of
-                "old" -> x
-                n -> read n :: Int)
-            x)
-
-parseCheck :: String -> (Int -> Bool)
-parseCheck = (fromJust .) $ P.run $ parserRegex "  Test: divisible by (.*)" $
-    \[n] -> (== 0) . (`mod` (read n))
-
-parseLeft :: String -> Int
-parseLeft = (fromJust .) $ P.run $ parserRegex "    If true: throw to monkey (.*)" $
-    \[i] -> read i
-
-parseRight :: String -> Int
-parseRight = (fromJust .) $ P.run $ parserRegex "    If false: throw to monkey (.*)" $
-    \[i] -> read i
-
-parse1 :: [String] -> ([Int], (Int -> Int, Int -> Bool, Int, Int))
-parse1 [_, i, w, c, l, r] = (parseItems i, (parseWorry1 w, parseCheck c, parseLeft l, parseRight r))
-
-parse2 :: [String] -> ([Int], (Int -> Int, Int -> Bool, Int, Int))
-parse2 [_, i, w, c, l, r] = (parseItems i, (parseWorry2 w, parseCheck c, parseLeft l, parseRight r))
+parseMonkeys :: String -> Maybe (Map Int Monkey)
+parseMonkeys = run $ fmap fromList $ parserList "" "\\n" "$" $ (,) <$>
+    parserRegex "Monkey (\\d+):\\n" (\[n] -> read n) <*>
+    parserMonkey
 
 main :: IO (String, String)
 main = do
-    (mItems1, monkeys1) <- unzip . map parse1 . explode "" . lines <$> readFile "Day11/input.txt"
-    let (counts1, _) = (!! 20) $ iterate (runC monkeys1) $ unzip $ zip [0, 0 ..] mItems1
-        monkeyBusiness1 = product $ take 2 $ reverse $ sort counts1
-    putStrLn "Monkey business with decreasing worry level:"
-    putStrLn $ show monkeyBusiness1
-    (mItems2, monkeys2) <- unzip . map parse2 . explode "" . lines <$> readFile "Day11/input.txt"
-    let (counts2, _) = (!! 10000) $ iterate (runC monkeys2) $ unzip $ zip [0, 0 ..] mItems2
-        monkeyBusiness2 = product $ take 2 $ reverse $ sort counts2
-    putStrLn "Monkey business with ever increasing worry level:"
-    putStrLn $ show monkeyBusiness2
+    monkeys <- maybeToIO "error while parsing monkeys" . parseMonkeys =<<
+        readFile "Day11/input.txt"
+
+    let newMonkeys1 = (!! 20) $ iterate round1 monkeys
+        inspectionCounts1 = map inspectionCount $ elems newMonkeys1
+        monkeyBusiness1 = product $ take 2 $ sortDesc inspectionCounts1
+    putStr "Monkey business with decreasing worry level: "
+    print monkeyBusiness1
+
+    let modulus = foldl1' lcm $ map checkM $ elems monkeys
+        newMonkeys2 = (!! 10000) $ iterate (round2 modulus) monkeys
+        inspectionCounts2 = map inspectionCount $ elems newMonkeys2
+        monkeyBusiness2 = product $ take 2 $ sortDesc inspectionCounts2
+    putStr "Monkey business with ever increasing worry level: "
+    print monkeyBusiness2
+
     return (show monkeyBusiness1, show monkeyBusiness2)
