@@ -1,8 +1,14 @@
 module Day12.Main (main) where
 
 import Prelude hiding (lookup, filter)
-import Data.Map (Map, fromList, mapWithKey, insert, lookup, (!), filter, keys)
 import Data.Maybe (maybeToList)
+import Data.Map (
+    Map,
+    fromList, toList,
+    insert, lookup, filter,
+    keys, findMin, findMax)
+import qualified Data.Map as M
+import Data.Array (Array, array, (!))
 import Control.Monad (guard)
 
 import Algorithm.Search (dijkstraAssoc)
@@ -11,12 +17,17 @@ import My.Util (maybeToIO)
 
 type Point = (Int, Int)
 
-graph :: (Char -> Char -> Bool) -> Map Point Char -> Map Point [(Point, Int)]
-graph condition hMap = flip mapWithKey hMap $ \(i, j) h -> do
-    pN <- [(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)]
-    hN <- maybeToList $ lookup pN hMap
-    guard $ condition h hN
-    return (pN, 1)
+graph :: (Char -> Char -> Bool) -> Map Point Char -> Array Point [(Point, Int)]
+graph condition hMap = array (pMin, pMax) $ do
+    (p @ (i, j), h) <- toList hMap
+    return (p, do
+        pN <- [(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)]
+        hN <- maybeToList $ lookup pN hMap
+        guard $ condition h hN
+        return (pN, 1))
+    where
+    pMin = fst $ findMin hMap
+    pMax = fst $ findMax hMap
 
 main :: IO (String, String)
 main = do
@@ -36,7 +47,7 @@ main = do
 
     let graphDown = graph (\h hN -> h <= succ hN) hMap
     (pathLength2, _) <- maybeToIO "no path found" $
-        dijkstraAssoc (graphDown !) (\p -> hMap ! p == 'a') end
+        dijkstraAssoc (graphDown !) (\p -> hMap M.! p == 'a') end
     putStr "Shortest path from any lowest point to top: "
     print pathLength2
 
