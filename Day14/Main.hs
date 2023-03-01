@@ -1,62 +1,59 @@
 module Day14.Main (main) where
 
-import Data.List
-import Data.Maybe
-import Data.Array
-import Data.Array.IO
+import Data.Maybe (maybeToList)
+import Data.Array (Array, listArray, (//))
+import Data.Array.ST (STArray, thaw, readArray, writeArray)
+import Control.Monad.ST (ST, runST)
 
-import My.Parser
+import My.Parser (parserRegex, parserList, run)
 
-countSand :: IOArray (Int, Int) Bool -> (Int, Int) -> ((Int, Int) -> Bool) -> Int -> IO Int
-countSand arr (sx, sy) check count = do
-    below <- readArray arr (sx, sy + 1)
-    if not below then
-        countSand arr (sx, sy + 1) check count
-    else do
-        left <- readArray arr (sx - 1, sy + 1)
-        if not left then
-            countSand arr (sx - 1, sy + 1) check count
-        else do
-            right <- readArray arr (sx + 1, sy + 1)
-            if not right then
-                countSand arr (sx + 1, sy + 1) check count
-            else if check (sx, sy) then
-                return (count + 1)
-            else do
-                writeArray arr (sx, sy) True
-                countSand arr (500, 0) check (count + 1)
+type Point = (Int, Int)
 
-getRocks :: [[Int]] -> [(Int, Int)]
-getRocks line = do
-    ([sx, sy], [ex, ey]) <- zip line (tail line)
+countSand :: Array Point Bool -> Point -> (Point -> Bool) -> Int
+countSand walls start check = runST $ loop 0 start =<< thaw walls
+    where
+    loop :: Int -> Point -> STArray s Point Bool -> ST s Int
+    loop count (x, y) walls = do
+        below <- readArray walls (x    , y + 1)
+        left  <- readArray walls (x - 1, y + 1)
+        right <- readArray walls (x + 1, y + 1)
+        head $ concat [
+            [loop count (x    , y + 1) walls | not below],
+            [loop count (x - 1, y + 1) walls | not  left],
+            [loop count (x + 1, y + 1) walls | not right],
+            [return $ count + 1 | check (x, y)],
+            [writeArray walls (x, y) True >> loop (count + 1) start walls]]
+
+getLines :: [Point] -> [Point]
+getLines points = do
+    ((sx, sy), (ex, ey)) <- zip points (tail points)
     x <- [min sx ex .. max sx ex]
     y <- [min sy ey .. max sy ey]
     return (x, y)
 
-parseRocks :: Parser [(Int, Int)]
-parseRocks =
-    fmap getRocks $
-    parserList "" "-> " "$" $
-    parserList "" "," " |$" $
-    parserRegex "([0-9]+)" (\[n] -> read n)
-
-parse :: String -> [(Int, Int)]
-parse = fromJust . run parseRocks
+parseRocks :: String -> Maybe [Point]
+parseRocks = run $ getLines <$>
+    parserList "" " -> " "$" (
+        parserRegex "(\\d+),(\\d+)" $ \[s, e] -> (read s, read e))
 
 main :: IO (String, String)
 main = do
-    rocks <- concat . map parse . lines <$> readFile "Day14/input.txt"
+    rocks <- concat . (maybeToList . parseRocks =<<) <$>
+        lines <$> readFile "Day14/input.txt"
     let maxY = (maximum $ map snd rocks) + 2
         minX = (minimum $ map fst rocks) - maxY
         maxX = (maximum $ map fst rocks) + maxY
-        rocksBottom = rocks ++ [(x, maxY) | x <- [minX .. maxX]]
-        rocksArrI = listArray ((minX, 0), (maxX, maxY)) (repeat False) // zip rocksBottom (repeat True)
-    rocksArr1 <- thaw rocksArrI
-    sandCount1 <- countSand rocksArr1 (500, 0) ((== (maxY - 1)) . snd) 0
-    putStrLn "Sand units before sand spills over:"
-    putStrLn $ show $ sandCount1 - 1
-    rocksArr2 <- thaw rocksArrI
-    sandCount2 <- countSand rocksArr2 (500, 0) (== (500, 0)) 0
-    putStrLn "Sand units before sand reaches top:"
-    putStrLn $ show sandCount2
+        floor = [(x, maxY) | x <- [minX .. maxX]]
+        walls = rocks ++ floor
+        wallsArr = listArray ((minX, 0), (maxX, maxY)) (repeat False) //
+            zip walls (repeat True)
+
+    let sandCount1 = countSand wallsArr (500, 0) ((== maxY - 1) . snd)
+    putStr "Sand units before sand spills over: "
+    print $ sandCount1 - 1
+
+    let sandCount2 = countSand wallsArr (500, 0) (== (500, 0))
+    putStr "Sand units before sand reaches top: "
+    print sandCount2
+
     return (show $ sandCount1 - 1, show sandCount2)
