@@ -23,8 +23,7 @@ parserPacket = asum [
 main :: IO (String, String)
 main = do
     packetPairs <- map (maybeToList . run parserPacket =<<) <$>
-        explode "" . lines <$>
-        readFile "Day13/input.txt"
+        explode "" . lines <$> readFile "Day13/input.txt"
 
     let result = sum $ map (+ 1) $ elemIndices True $
             map (\[p1, p2] -> p1 < p2) packetPairs
