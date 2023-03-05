@@ -1,6 +1,6 @@
 module Day16.Main (main) where
 
-import Data.List (sortOn, insertBy, (\\))
+import Data.List (sortOn, (\\))
 import Data.Map (Map, fromList, (!))
 import Data.Maybe (maybeToList)
 import Control.Monad (guard)
@@ -19,14 +19,9 @@ data State = State {
     deriving (Eq, Ord)
 
 maxGain :: [(Valve, Int)] -> [Valve] -> Int
-maxGain guys valves = loop (sortDesc $ map snd guys) (map snd valves)
-    where
-    loop :: [Int] -> [Int] -> Int
-    loop _ [] = 0
-    loop [] _ = 0
-    loop (t : ts) (v : vs)
-        | t <= 3 = 0
-        | t > 3 = (t - 3) * v + loop (insertBy (flip compare) (t - 3) ts) vs
+maxGain guys valves =
+    let rTimes = sortDesc $ (\t -> [t - 3, t - 6 .. 0]) =<< map snd guys in
+    sum $ zipWith (*) rTimes (map snd valves)
 
 next :: Map (String, String) Int -> State -> [State]
 next edges s =
@@ -44,7 +39,6 @@ next edges s =
             newMin = eMin s + gain
             newMax = newMin + maxGain newGuys newRemainValves
         return $ State newGuys newRemainValves newMin newMax
-
     stop =
         let gs = tail $ guys s
             newMax = eMin s + maxGain gs (remainValves s) in
