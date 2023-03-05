@@ -1,44 +1,57 @@
 module Day16.Main (main) where
 
-import Data.List (sortOn, (\\))
+import Data.List (sortOn, insertBy, (\\))
 import Data.Map (Map, fromList, (!))
 import Data.Maybe (maybeToList)
 import Control.Monad (guard)
 
-import Algorithm.Search (dijkstra, dijkstraAssoc)
+import Algorithm.Search (dijkstra)
 
+import My.Util (sortDesc)
 import My.Parser (parserRegex, parserList, run)
 
 type Valve = (String, Int)
-type State = ([Valve], [Valve], Int, Int, [Int])
+data State = State {
+    guys :: [(Valve, Int)],
+    remainValves :: [Valve],
+    eMin :: Int,
+    eMax :: Int}
+    deriving (Eq, Ord)
 
-maxGain :: [Int] -> [Valve] -> Int
-maxGain _ [] = 0
-maxGain [] _ = 0
-maxGain [t] vs = maxGain [t, 0] vs
-maxGain [t1, t2] vs @ ((_, v) : rest)
-    | t1 < t2 = maxGain [t2, t1] vs
-    | t1 <= 3 = 0
-    | otherwise = (t1 - 3) * v + maxGain [t1 - 3, t2] rest
+maxGain :: [(Valve, Int)] -> [Valve] -> Int
+maxGain guys valves = loop (sortDesc $ map snd guys) (map snd valves)
+    where
+    loop :: [Int] -> [Int] -> Int
+    loop _ [] = 0
+    loop [] _ = 0
+    loop (t : ts) (v : vs)
+        | t <= 3 = 0
+        | t > 3 = (t - 3) * v + loop (insertBy (flip compare) (t - 3) ts) vs
 
-next :: Map (String, String) Int -> State -> [(State, Int)]
-next edges (pos : ps, remainValves, eMin, eMax, remainTime : rts) =
+next :: Map (String, String) Int -> State -> [State]
+next edges s =
     neighbours ++ stop
     where
     neighbours = do
-        newPos <- remainValves
-        let newRemainValves = remainValves \\ [newPos]
+        let (pos, remainTime) : gs = guys s
+        newPos <- remainValves s
+        let newRemainValves = remainValves s \\ [newPos]
             dist = edges ! (fst pos, fst newPos)
             newRemainTime = remainTime - dist - 1
         guard $ newRemainTime > 0
-        let gain = newRemainTime * (snd newPos)
-            newMin = eMin + gain
-            newMax = newMin + maxGain (newRemainTime : rts) newRemainValves
-        return ((newPos : ps, newRemainValves, newMin, newMax, newRemainTime : rts), eMax - newMax)
+        let newGuys = (newPos, newRemainTime) : gs
+            gain = newRemainTime * (snd newPos)
+            newMin = eMin s + gain
+            newMax = newMin + maxGain newGuys newRemainValves
+        return $ State newGuys newRemainValves newMin newMax
 
     stop =
-        let newMax = eMin + maxGain rts remainValves in
-        [((ps, remainValves, eMin, newMax, rts), eMax - newMax)]
+        let gs = tail $ guys s
+            newMax = eMin s + maxGain gs (remainValves s) in
+        [s {guys = gs, eMax = newMax}]
+
+tCost :: State -> State -> Int
+tCost s1 s2 = eMax s1 - eMax s2
 
 parseValve :: String -> Maybe (Valve, [String])
 parseValve = run $ (,) <$>
@@ -59,16 +72,19 @@ main = do
             let Just (dist, _) = dijkstra (graph !) (\_ _ -> 1) (== end) start
             return ((start, end), dist)
 
-    let tMax = maxGain [30] valves
-        start = ([("AA", 0)], valves, 0, tMax, [30])
-        Just (cost, _) = dijkstraAssoc (next edges) (\(_, _, _, _, t) -> t == []) start
+    let me = (("AA", 0), 30)
+        tMax = maxGain [me] valves
+        start = State [me] valves 0 tMax
+        Just (cost, _) = dijkstra (next edges) tCost (null . guys) start
         maxP = tMax - cost
     putStr "Maximal released pressure alone: "
     print $ maxP
 
-    let tMax2 = maxGain [26, 26] valves
-        start2 = ([("AA", 0), ("AA", 0)], valves, 0, tMax2, [26, 26])
-        Just (cost2, _) = dijkstraAssoc (next edges) (\(_, _, _, _, t) -> t == []) start2
+    let me2 = (("AA", 0), 26)
+        elephant = (("AA", 0), 26)
+        tMax2 = maxGain [me2, elephant] valves
+        start2 = State [me2, elephant] valves 0 tMax2
+        Just (cost2, _) = dijkstra (next edges) tCost (null . guys) start2
         maxP2 = tMax2 - cost2
     putStr "Maximal released pressure together with elephant: "
     print maxP2
