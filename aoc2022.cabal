@@ -42,7 +42,8 @@ test-suite test
     Day13.Main,
     Day14.Main,
     Day15.Main,
-    Day16.Main
+    Day16.Main,
+    Day17.Main
 
   build-depends:
     base >= 4.14 && < 4.15,
