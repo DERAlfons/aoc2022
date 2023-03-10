@@ -1,80 +1,100 @@
 module Day17.Main (main) where
 
-import Data.List (elemIndex)
-import Data.Set (Set, fromList, union, notMember, lookupMax)
-import qualified Data.Set as S
-import Data.Maybe (fromJust)
+import Prelude hiding (map, filter, lookup)
+import qualified Data.List as L
+import Data.Set (
+    Set, empty, fromList,
+    map, filter, findMax,
+    intersection, union)
+import Data.Map (Map, insert, lookup)
+import qualified Data.Map as M
+import Data.Maybe (fromMaybe)
+import Control.Monad (guard)
 
-type State = (Int, Int, [Int])
+type Point = (Int, Int)
+type Rock = Set Point
+type Tower = (Set Point, Int, Int)
+type State = ([Int], Rock)
 
-hBar :: Int -> [(Int, Int)]
-hBar h = [(2, h + 4), (3, h + 4), (4, h + 4), (5, h + 4)]
+rocks :: [Rock]
+rocks = cycle $ L.map fromList [
+    [(2, 4), (3, 4), (4, 4), (5, 4)],
+    [(3, 6), (2, 5), (3, 5), (4, 5), (3, 4)],
+    [(4, 6), (4, 5), (2, 4), (3, 4), (4, 4)],
+    [(2, 7), (2, 6), (2, 5), (2, 4)],
+    [(2, 5), (3, 5), (2, 4), (3, 4)]]
 
-plus :: Int -> [(Int, Int)]
-plus h = [(3, h + 6), (2, h + 5), (3, h + 5), (4, h + 5), (3, h + 4)]
+shiftY :: Int -> Rock -> Rock
+shiftY h = map (\(x, y) -> (x, y + h))
 
-angle :: Int -> [(Int, Int)]
-angle h = [(4, h + 6), (4, h + 5), (2, h + 4), (3, h + 4), (4, h + 4)]
+pushWind :: Char -> Set Point -> Rock -> Rock
+pushWind w pile rock = fromMaybe rock $ do
+    let windRock = map (\(x, y) -> (x + direction w, y)) rock
+    guard $ all (\(x, _) -> 0 <= x && x <= 6) windRock
+    guard $ intersection windRock pile == empty
+    return windRock
+    where
+    direction '>' =  1
+    direction '<' = -1
 
-vBar :: Int -> [(Int, Int)]
-vBar h = [(2, h + 7), (2, h + 6), (2, h + 5), (2, h + 4)]
+dropRock :: Tower -> Rock -> [Char] -> Either (Tower, [Char]) (Tower, Rock)
+dropRock tower rock [] = Right (tower, rock)
+dropRock tower @ (pile, height, count) rock (w : ws)
+    | intersection fallRock pile == empty = dropRock tower fallRock ws
+    | otherwise = Left ((newPile, newHeight, count + 1), ws)
+    where
+    windRock = pushWind w pile rock
+    fallRock = map (\(x, y) -> (x, y - 1)) windRock
+    newPile = union pile windRock
+    newHeight = max height (findMax $ map snd windRock)
 
-block :: Int -> [(Int, Int)]
-block h = [(2, h + 5), (3, h + 5), (2, h + 4), (3, h + 4)]
+fall :: Tower -> [Rock] -> [Char] -> Either Tower (Tower, Rock, [Rock])
+fall tower [] _ = Left tower
+fall tower @ (_, height, _) (rock : rocks) wind =
+    case dropRock tower (shiftY height rock) wind of
+        Left (newTower, newWind) -> fall newTower rocks newWind
+        Right (newTower, newRock) -> Right (newTower, newRock, rocks)
 
-rocks :: [Int -> [(Int, Int)]]
-rocks = cycle [hBar, plus, angle, vBar, block]
+getStructure :: Tower -> [Int]
+getStructure (pile, height, _) = do
+    x <- [0 .. 6]
+    let top = findMax $ filter ((== x) . fst) pile
+    return $ snd top - height
 
-fall :: Int -> Set (Int, Int) -> [(Int, Int)] -> String -> [Int -> [(Int, Int)]] -> Int
-fall height pillar rock (d : ds) rocks =
-    let windRock = move d rock
-        realWindRock = if all ((>= 0) . fst) windRock && all ((< 7) . fst) windRock && all (flip notMember pillar) windRock then windRock else rock
-        fallRock = map (\(x, y) -> (x, y - 1)) realWindRock
-    in if all (flip notMember pillar) fallRock then fall height pillar fallRock ds rocks else
-        let newHeight = max (snd $ head realWindRock) height
-        in case rocks of
-            [] -> newHeight
-            (nextRock : rest) -> fall newHeight (union pillar $ fromList realWindRock) (nextRock newHeight) ds rest
-
-fall2 :: [State] -> [(Int, Int)] -> Int -> Int -> Int -> Set (Int, Int) -> [(Int, Int)] -> [String] -> [Int -> [(Int, Int)]] -> [(Int, Int)]
-fall2 s (h : hs) rId rDrop height pillar rock ([] : dss) rocks =
-    let structure = getStructure height pillar
-        state = (rId, rDrop, structure)
-    in if elem state s then (h : hs) else fall2 (state : s) (h : h : hs) rId rDrop height pillar rock dss rocks
-fall2 s ((hInfo, bCount) : hs) rId rDrop height pillar rock ((d : ds) : dss) (nextRock : rocks) =
-    let windRock = move d rock
-        realWindRock = if all ((>= 0) . fst) windRock && all ((< 7) . fst) windRock && all (flip notMember pillar) windRock then windRock else rock
-        fallRock = map (\(x, y) -> (x, y - 1)) realWindRock
-    in if all (flip notMember pillar) fallRock then fall2 s ((hInfo, bCount) : hs) rId (rDrop + 1) height pillar fallRock (ds : dss) (nextRock : rocks) else
-        let newHeight = max (snd $ head realWindRock) height
-        in fall2 s ((newHeight, bCount + 1) : hs) ((rId + 1) `mod` 5) 0 newHeight (union pillar $ fromList realWindRock) (nextRock newHeight) (ds : dss) rocks
-
-getStructure :: Int -> Set (Int, Int) -> [Int]
-getStructure height pillar = map ((subtract height) . snd . fromJust . lookupMax) [
-    S.filter ((== 0) . fst) pillar,
-    S.filter ((== 1) . fst) pillar,
-    S.filter ((== 2) . fst) pillar,
-    S.filter ((== 3) . fst) pillar,
-    S.filter ((== 4) . fst) pillar,
-    S.filter ((== 5) . fst) pillar,
-    S.filter ((== 6) . fst) pillar]
-
-move :: Char -> [(Int, Int)] -> [(Int, Int)]
-move '>' = map (\(x, y) -> (x + 1, y))
-move '<' = map (\(x, y) -> (x - 1, y))
+findCycle :: Tower -> [Rock] -> [Char] -> (Int, Int, Int, Int)
+findCycle tower rocks wind = loop M.empty tower rocks wind
+    where
+    loop :: Map State (Int, Int) -> Tower -> [Rock] -> [Char] -> (Int, Int, Int, Int)
+    loop states tower rocks w = case lookup checkState states of
+        Just (initHeight, initCount) ->
+            (initHeight, initCount, checkHeight, checkCount)
+        Nothing -> loop newStates newTower newRocks newWind
+        where
+        Right (checkTower, checkRock, newRocks) = fall tower rocks w
+        (_, checkHeight, checkCount) = checkTower
+        checkState = (getStructure checkTower, shiftY (-checkHeight) checkRock)
+        newStates = insert checkState (checkHeight, checkCount) states
+        Left (newTower, newWind) = dropRock checkTower checkRock wind
 
 main :: IO (String, String)
 main = do
     [wind] <- lines <$> readFile "Day17/input.txt"
-    let height = fall 0 (fromList [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0)]) (head rocks $ 0) (cycle wind) (tail $ take 2022 rocks)
-    putStrLn "Height of rock tower after 2022 rocks:"
-    putStrLn $ show height
-    let [(heightEnd, rocksEnd), (heightStart, rocksStart)] = fall2 [] [(0, 0)] 0 0 0 (fromList [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0)]) (head rocks $ 0) (repeat wind) (tail rocks)
+    let floor = (fromList [(x, 0) | x <- [0 .. 6]], 0, 0)
+
+    let Left (_, height1, _) = fall floor (take 2022 rocks) (cycle wind)
+    putStr "Height of rock tower after 2022 rocks: "
+    print height1
+
+    let (heightStart, rocksStart, heightEnd, rocksEnd) =
+            findCycle floor rocks wind
         rocksStep = rocksEnd - rocksStart
         heightStep = heightEnd - heightStart
-        (steps, rocksRest) = (1000000000000 - rocksStart) `divMod` rocksStep
-        height2 = fall 0 (fromList [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0)]) (head rocks $ 0) (cycle wind) (tail $ take (rocksStart + rocksRest) rocks)
-        result2 = height2 + steps * heightStep
-    putStrLn "Height of rock tower after 1000000000000 rocks:"
-    putStrLn $ show result2
-    return (show height, show result2)
+        (steps, rocksRest) = (10 ^ 12 - rocksStart) `divMod` rocksStep
+        rocksMargins = rocksStart + rocksRest
+        Left (_, heightMargins, _) =
+            fall floor (take rocksMargins rocks) (cycle wind)
+        height2 = steps * heightStep + heightMargins
+    putStr "Height of rock tower after 10 ^ 12 rocks: "
+    print height2
+
+    return (show height1, show height2)
