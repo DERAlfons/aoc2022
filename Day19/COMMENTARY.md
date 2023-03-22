@@ -15,7 +15,8 @@ The basic idea would be to go through all the possible build orders and see, how
 produce. But the number of possible build orders increases exponentially with the time steps, so
 there are too many possibilities to check. I tried to find a way to go through the possibilities in
 a clever way to check as few of them as possible while eliminating the rest, similar to what i did
-for the task on Day 16, but my efforts did not bear any fruit.
+for the task on [Day 16](https://github.com/DERAlfons/aoc2022/blob/master/Day16/COMMENTARY.md), but
+my efforts did not bear any fruit.
 
 What i ended up doing was to reduce the number of possibilities every few (6) timesteps by picking
 the 100 build orders which at that timestep have the most robots and the 100 build orders which at
