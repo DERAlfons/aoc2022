@@ -2,7 +2,7 @@
 
 [Puzzle text](https://adventofcode.com/2022/day/19)
 
-[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day18/Main.hs)
+[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day19/Main.hs)
 
 The nineteenth day's task was to find an optimal build order in which to build some
 resource-gathering robots, to collect a maximal amount of resources.
