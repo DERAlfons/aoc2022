@@ -1,49 +1,64 @@
 module Day20.Main (main) where
 
-import Data.List
-import Data.Array
-import Data.Array.ST
-import Control.Monad.ST
+import Data.List (elemIndex)
+import Control.Monad (forM_, replicateM)
+import Control.Monad.ST (ST, runST)
+import Data.Array.ST (STArray, newListArray, readArray, writeArray)
 
-mix :: Int -> [Int] -> Array Int (Int, Int)
-mix n list = runSTArray $ do
+import My.Util (for, applyN)
+
+data Node = Node {value :: Int, prev :: Int, next :: Int}
+
+rmv :: STArray s Int Node -> Node -> ST s ()
+rmv a n = do
+    before <- readArray a (prev n)
+    after <- readArray a (next n)
+    writeArray a (prev n) before {next = next n}
+    writeArray a (next n) after {prev = prev n}
+
+ins :: STArray s Int Node -> Int -> Node -> Int -> ST s ()
+ins a i n iAfter = do
+    after <- readArray a iAfter
+    before <- readArray a (prev after)
+    writeArray a (prev after) before {next = i}
+    writeArray a (next before) after {prev = i}
+    writeArray a i n {prev = prev after, next = next before}
+
+mix :: STArray s Int Node -> Int -> ST s ()
+mix a len = forM_ [0 .. len - 1] $ \i -> do
+    n <- readArray a i
+    let shift = value n `mod` (len - 1)
+    iAfter <- applyN shift (fmap next . readArray a =<<) (return $ next n)
+    rmv a n
+    ins a i n iAfter
+
+mixN :: Int -> [Int] -> [Int]
+mixN n list = map value $ runST $ do
     let len = length list
-    a1 <- newListArray (0, len - 1) $ zip list [0, 1 ..] :: ST s (STArray s Int (Int, Int))
-    a2 <- newListArray (0, len - 1) [0, 1 ..] :: ST s (STArray s Int Int)
-    sequence $ concat $ replicate n $ do
-        i <- [0 .. len - 1]
-        return $ do
-            (steps, pos) <- readArray a1 i
-            let newPos = pos + (steps `mod` (len - 1))
-            writeArray a1 i (steps, newPos `mod` len)
-            sequence $ do
-                j <- map (`mod` len) [pos + 1 .. newPos]
-                return $ do
-                    p1 <- readArray a2 j
-                    (s2, p2) <- readArray a1 p1
-                    writeArray a1 p1 (s2, (p2 - 1) `mod` len)
-                    writeArray a2 ((j - 1) `mod` len) p1
-            writeArray a2 (newPos `mod` len) i
-    return a1
+        nodeList = for (zip [0 ..] list) $ \(i, v) ->
+            Node v ((i - 1) `mod` len) ((i + 1) `mod` len)
+    a <- newListArray (0, len - 1) nodeList
+    replicateM n $ mix a len
+    sequence $ take len $ iterate (readArray a . next =<<) (readArray a 0)
+
+getCoords :: [Int] -> [Int]
+getCoords a = [a !! ((i0 + i) `mod` length a) | i <- [1000, 2000, 3000]]
+    where
+    Just i0 = elemIndex 0 a
 
 main :: IO (String, String)
 main = do
     coordinates <- map read . lines <$> readFile "Day20/input.txt"
     let len = length coordinates
-        mcsarr = mix 1 coordinates
-        mcs = map fst $ sortOn snd $ elems mcsarr
-        Just i0 = elemIndex 0 mcs
-        c1 = mcs !! ((i0 + 1000) `mod` len)
-        c2 = mcs !! ((i0 + 2000) `mod` len)
-        c3 = mcs !! ((i0 + 3000) `mod` len)
-    putStrLn "Sum of coordinates without decryption key and with 1 round of mixing:"
-    putStrLn $ show $ c1 + c2 + c3
-    let mcsarrd = mix 10 (map (* 811589153) coordinates)
-        mcsd = map fst $ sortOn snd $ elems mcsarrd
-        Just i0d = elemIndex 0 mcsd
-        c1d = mcsd !! ((i0d + 1000) `mod` len)
-        c2d = mcsd !! ((i0d + 2000) `mod` len)
-        c3d = mcsd !! ((i0d + 3000) `mod` len)
-    putStrLn "Sum of coordinates with decryption key and with 10 rounds of mixing:"
-    putStrLn $ show $ c1d + c2d + c3d
-    return (show $ c1 + c2 + c3, show $ c1d + c2d + c3d)
+
+    let mcs = mixN 1 coordinates
+        result1 = sum $ getCoords mcs
+    putStr "Sum of coordinates without decryption key and with 1 round of mixing: "
+    print result1
+
+    let mcsd = mixN 10 (map (* 811589153) coordinates)
+        result2 = sum $ getCoords mcsd
+    putStr "Sum of coordinates with decryption key and with 10 rounds of mixing: "
+    print result2
+
+    return (show result1, show result2)
