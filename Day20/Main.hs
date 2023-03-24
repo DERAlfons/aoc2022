@@ -3,11 +3,13 @@ module Day20.Main (main) where
 import Data.List (elemIndex)
 import Control.Monad (forM_, replicateM)
 import Control.Monad.ST (ST, runST)
-import Data.Array.ST (STArray, newListArray, readArray, writeArray)
+import Data.Array.ST (
+    STArray, newListArray, readArray, writeArray,
+    getBounds, range)
 
 import My.Util (for, applyN)
 
-data Node = Node {value :: Int, prev :: Int, next :: Int}
+data Node = Node {value :: Int, shift :: Int, prev :: Int, next :: Int}
 
 rmv :: STArray s Int Node -> Node -> ST s ()
 rmv a n = do
@@ -24,21 +26,20 @@ ins a i n iAfter = do
     writeArray a (next before) after {prev = i}
     writeArray a i n {prev = prev after, next = next before}
 
-mix :: STArray s Int Node -> Int -> ST s ()
-mix a len = forM_ [0 .. len - 1] $ \i -> do
+mix :: STArray s Int Node -> ST s ()
+mix a = fmap range (getBounds a) >>= mapM_ (\i -> do
     n <- readArray a i
-    let shift = value n `mod` (len - 1)
-    iAfter <- applyN shift (fmap next . readArray a =<<) (return $ next n)
+    iAfter <- applyN (shift n) (fmap next . readArray a =<<) (return $ next n)
     rmv a n
-    ins a i n iAfter
+    ins a i n iAfter)
 
 mixN :: Int -> [Int] -> [Int]
 mixN n list = map value $ runST $ do
     let len = length list
         nodeList = for (zip [0 ..] list) $ \(i, v) ->
-            Node v ((i - 1) `mod` len) ((i + 1) `mod` len)
+            Node v (v `mod` (len - 1)) ((i - 1) `mod` len) ((i + 1) `mod` len)
     a <- newListArray (0, len - 1) nodeList
-    replicateM n $ mix a len
+    replicateM n $ mix a
     sequence $ take len $ iterate (readArray a . next =<<) (readArray a 0)
 
 getCoords :: [Int] -> [Int]
