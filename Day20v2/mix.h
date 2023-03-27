@@ -1,10 +1,12 @@
 #pragma once
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern long long int *mix(long long int *coords, int length, int rounds);
+int64_t *mix(int64_t *coords, int length, int rounds);
 
 #ifdef __cplusplus
 }

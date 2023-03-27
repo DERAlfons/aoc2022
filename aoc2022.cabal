@@ -1,4 +1,4 @@
-cabal-version: 3.4
+cabal-version: 3.0
 
 name:           aoc2022
 version:        0.0.0.2
@@ -22,6 +22,10 @@ extra-source-files:
 
 test-suite test
   type: exitcode-stdio-1.0
+
+  default-language: Haskell2010
+
+  ld-options: -static
 
   main-is: Test.hs
 
@@ -51,6 +55,16 @@ test-suite test
     Day20.Main,
     Day20v2.Main
 
+  includes:
+    Day08v0/lines_of_sight.h
+    Day20v2/mix.h
+
+  c-sources:
+    Day08v0/lines_of_sight.c
+
+  cxx-sources:
+    Day20v2/mix.cpp
+
   build-depends:
     base >= 4.14 && < 4.15,
     containers,
@@ -60,21 +74,5 @@ test-suite test
     template-haskell,
     my >= 0.0 && < 0.1,
     regex-pcre-builtin
-
-  default-language: Haskell2010
-
-  ghc-options: -Wno-name-shadowing
-
-  includes:
-    Day08v0/lines_of_sight.h
-
-  include-dirs:
-    Day20v2
-
-  c-sources:
-    Day08v0/lines_of_sight.c
-
-  cxx-sources:
-    Day20v2/mix.cpp
 
   extra-libraries: stdc++
