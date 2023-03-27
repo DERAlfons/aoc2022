@@ -1,4 +1,4 @@
-cabal-version: >= 1.10
+cabal-version: 3.4
 
 name:           aoc2022
 version:        0.0.0.2
@@ -66,8 +66,10 @@ test-suite test
   ghc-options: -Wno-name-shadowing
 
   includes:
-    Day08v0/lines_of_sight.h,
-    Day20v2/mix.h
+    Day08v0/lines_of_sight.h
+
+  include-dirs:
+    Day20v2
 
   c-sources:
     Day08v0/lines_of_sight.c
