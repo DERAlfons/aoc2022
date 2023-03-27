@@ -13,7 +13,7 @@ genMains :: Q Exp
 genMains = do
     moduleNames <- getModuleNames <$> (reifyModule =<< thisModule)
     return $ ListE $ do
-        moduleName <- filter (=~ "^Day\\d.*\\.Main$") moduleNames
+        moduleName <- filter (=~ "^Day\\d+(v\\d+)?\\.Main$") moduleNames
         let day = LitE $ StringL $ takeWhile (/= '.') moduleName
             main = VarE $ mkName $ moduleName ++ ".main"
         return $ TupE [Just day, Just main]
