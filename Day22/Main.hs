@@ -2,26 +2,25 @@
 
 module Day22.Main (main) where
 
-import Data.List
-import Data.Maybe
-import Data.Array
+import Data.List (elemIndex, foldl')
+import Data.Array (Array, listArray, bounds, (!))
+import Data.Foldable (asum)
+import Control.Applicative (many)
+import Control.Monad (guard)
 
-import My.Parser
+import My.Util (explode, maybeToIO)
+import My.Parser (parserRegex, run)
 
-walk :: Array (Int, Int) Char
-     -> (Array (Int, Int) Char -> (Int, Int) -> Char -> ((Int, Int), Char))
-     -> (Int, Int) -> [Int] -> Char -> [Char] -> ((Int, Int), Char)
-walk _ _ pos [] d _ = (pos, d)
-walk _ _ pos [0] d _ = (pos, d)
-walk m step pos (0 : ws) d (t : ts) = walk m step pos ws (turn t d) ts
-walk m step pos (w : ws) d ts =
-    let (newPos, newD) = step m pos d
-    in if m ! newPos == '#' then
-        case ts of
-            [] -> (pos, d)
-            t : tss -> walk m step pos ws (turn t d) tss
-    else
-        walk m step newPos ((w - 1) : ws) newD ts
+type Point = (Int, Int)
+type Position = (Point, Char)
+data Instruction = Move Int | Turn Char
+
+walk :: (Position -> Maybe Position) -> Position -> Instruction -> Position
+walk _ (pt, d) (Turn t) = (pt, turn t d)
+walk _ pos (Move 0) = pos
+walk step pos (Move w) = case step pos of
+    Just newPos -> walk step newPos (Move (w - 1))
+    Nothing -> pos
 
 turn :: Char -> Char -> Char
 turn 'L' 'N' = 'W'
@@ -33,27 +32,27 @@ turn 'R' 'E' = 'S'
 turn 'R' 'S' = 'W'
 turn 'R' 'W' = 'N'
 
-stepFlat :: Array (Int, Int) Char -> (Int, Int) -> Char -> ((Int, Int), Char)
-stepFlat m (posY, posX) d =
-    let (maxY, maxX) = snd $ bounds m
-        newPos = case d of
-            'N' -> ((posY - 1) `mod` (maxY + 1), posX)
-            'E' -> (posY, (posX + 1) `mod` (maxX + 1))
-            'S' -> ((posY + 1) `mod` (maxY + 1), posX)
-            'W' -> (posY, (posX - 1) `mod` (maxX + 1))
-    in if m ! newPos == ' ' then
-        stepFlat m newPos d
-    else
-        (newPos, d)
+stepFlat :: Array Point Char -> Position -> Maybe Position
+stepFlat m ((y, x), d) = let
+    (maxY, maxX) = snd $ bounds m
+    newPt = case d of
+        'N' -> ((y - 1) `mod` (maxY + 1), x)
+        'E' -> (y, (x + 1) `mod` (maxX + 1))
+        'S' -> ((y + 1) `mod` (maxY + 1), x)
+        'W' -> (y, (x - 1) `mod` (maxX + 1)) in
+    case m ! newPt of
+        ' ' -> stepFlat m (newPt, d)
+        '.' -> Just (newPt, d)
+        '#' -> Nothing
 
-stepCube :: Array (Int, Int) Char -> (Int, Int) -> Char -> ((Int, Int), Char)
-stepCube m (posY, posX) d =
-    let (newY, newX) = case d of
-            'N' -> (posY - 1, posX)
-            'E' -> (posY, posX + 1)
-            'S' -> (posY + 1, posX)
-            'W' -> (posY, posX - 1)
-    in if
+stepCube :: Array Point Char -> Position -> Maybe Position
+stepCube m pos @ ((y, x), d) = let
+    (newY, newX) = case d of
+        'N' -> (y - 1, x)
+        'E' -> (y, x + 1)
+        'S' -> (y + 1, x)
+        'W' -> (y, x - 1)
+    tfPos @ (tfPt, _) = if
         | d == 'N' && newY == -1 && newX >= 50 && newX <= 99 -> ((100 + newX, 0), 'E')
         | d == 'N' && newY == -1 && newX >= 100 && newX <= 149 -> ((199, newX - 100), 'N')
         | d == 'W' && newX == 49 && newY >= 0 && newY <= 49 -> ((149 - newY, 0), 'E')
@@ -68,13 +67,13 @@ stepCube m (posY, posX) d =
         | d == 'W' && newX == -1 && newY >= 150 && newY <= 199 -> ((0, newY - 100), 'S')
         | d == 'E' && newX == 50 && newY >= 150 && newY <= 199 -> ((149, newY - 100), 'N')
         | d == 'S' && newY == 200 && newX >= 0 && newX <= 49 -> ((0, newX + 100), 'S')
-        | otherwise -> ((newY, newX), d)
+        | otherwise -> ((newY, newX), d) in
+    guard (m ! tfPt == '.') >> return tfPos
 
-parserW :: Parser [Int]
-parserW = parserList "" "R|L" "$" $ parserRegex "([0-9]+)" (\[n] -> read n)
-
-parse :: String -> [Int]
-parse = fromJust . run parserW
+parsePath :: String -> Maybe [Instruction]
+parsePath = run $ many $ asum [
+    parserRegex "(\\d+)" $ \[n] -> Move $ read n,
+    parserRegex "(L|R)" $ \[d] -> Turn $ head d]
 
 directionValue :: Char -> Int
 directionValue 'E' = 0
@@ -84,20 +83,22 @@ directionvalue 'N' = 3
 
 main :: IO (String, String)
 main = do
-    (mLines, [_, insts]) <- break (== "") . lines <$> readFile "Day22/input.txt"
-    let lengthY = length mLines
-        lengthX = length (mLines !! 0)
+    [mLines, [sPath]] <- explode "" . lines <$> readFile "Day22/input.txt"
+    let lenY = length mLines
+        lenX = maximum $ map length mLines
+        mLinesPad = map (take lenX . (++ repeat ' ')) mLines
+        mArr = listArray ((0, 0), (lenY - 1, lenX - 1)) $ concat mLinesPad
         Just startX = elemIndex '.' (mLines !! 0)
-        emLines = map (\x -> take lengthX $ x ++ (repeat ' ')) mLines
-        m = listArray ((0, 0), (lengthY - 1, lengthX - 1)) $ concat emLines
-        ws = parse insts
-        ts = filter (\x -> x == 'R' || x == 'L') insts
-        ((rY, rX), rD) = walk m stepFlat (0, startX) ws 'E' ts
+    path <- maybeToIO "error while parsing movement instructions" $ parsePath sPath
+
+    let ((rY, rX), rD) = foldl' (walk (stepFlat mArr)) ((0, startX), 'E') path
         result = 1000 * (rY + 1) + 4 * (rX + 1) + directionValue rD
-    putStrLn "Code of final position:"
-    putStrLn $ show result
-    let ((rYc, rXc), rDc) = walk m stepCube (0, startX) ws 'E' ts
+    putStr "Code of final position: "
+    print result
+
+    let ((rYc, rXc), rDc) = foldl' (walk (stepCube mArr)) ((0, startX), 'E') path
         resultC = 1000 * (rYc + 1) + 4 * (rXc + 1) + directionValue rDc
-    putStrLn "Code of final position on cube:"
-    putStrLn $ show resultC
+    putStr "Code of final position on cube: "
+    print resultC
+
     return (show result, show resultC)
