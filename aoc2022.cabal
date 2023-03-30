@@ -55,7 +55,8 @@ test-suite test
     Day20.Main,
     Day20v2.Main,
     Day21.Main,
-    Day22.Main
+    Day22.Main,
+    Day23.Main
 
   includes:
     Day08v0/lines_of_sight.h
