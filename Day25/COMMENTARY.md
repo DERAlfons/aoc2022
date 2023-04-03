@@ -2,7 +2,7 @@
 
 [Puzzle text](https://adventofcode.com/2022/day/25)
 
-[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day24/Main.hs)
+[My code](https://github.com/DERAlfons/aoc2022/blob/master/Day25/Main.hs)
 
 On the twentyfifth day, the task was to add some numbers given in an unusual representation.
 
