@@ -1,41 +1,38 @@
 module Day25.Main (main) where
 
+import Data.List (foldl1')
+
 value :: Char -> Int
 value '=' = -2
 value '-' = -1
-value '0' = 0
-value '1' = 1
-value '2' = 2
+value '0' =  0
+value '1' =  1
+value '2' =  2
 
 symbol :: Int -> Char
 symbol (-2) = '='
 symbol (-1) = '-'
-symbol 0 = '0'
-symbol 1 = '1'
-symbol 2 = '2'
+symbol   0  = '0'
+symbol   1  = '1'
+symbol   2  = '2'
 
-stoi :: String -> Int
-stoi s = sum $ zipWith (*) (map (5 ^) [0, 1 ..]) (map value $ reverse s)
-
-ito5 :: Int -> [Int]
-ito5 0 = []
-ito5 n = (n `mod` 5) : (ito5 (n `div` 5))
-
-_5tos :: [Int] -> String
-_5tos ds = map symbol . reverse $ loop ds 0
+addSnafu :: [Int] -> [Int] -> [Int]
+addSnafu a b = reverse $ loop (reverse a) (reverse b) 0
     where
-    loop [] 0 = []
-    loop [] 1 = [1]
-    loop (d : ds) c =
-        let dn = ((d + c + 2) `mod` 5) - 2
-        in if d + c >= 5 || dn < 0 then
-               dn : (loop ds 1)
-           else
-               dn : (loop ds 0)
+    loop [] [] 0 = []
+    loop [] [] c = [c]
+    loop a [] c = loop a [0] c
+    loop [] b c = loop [0] b c
+    loop (da : a) (db : b) c = let
+        (carry, d) = (da + db + c + 2) `divMod` 5 in
+        (d - 2) : loop a b carry
 
 main :: IO (String, String)
 main = do
-    result <- _5tos . ito5 . sum . map stoi . lines <$> readFile "Day25/input.txt"
-    putStrLn "Total fuel:"
-    putStrLn result
-    return (result, "No second task :)")
+    fuelList <- map (map value) . lines <$> readFile "Day25/input.txt"
+
+    let totalFuel = map symbol $ foldl1' addSnafu fuelList
+    putStr "Total fuel: "
+    putStrLn totalFuel
+
+    return (totalFuel, "No second part :)")
