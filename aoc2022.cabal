@@ -71,12 +71,12 @@ test-suite test
     Day20v2/mix.cpp
 
   build-depends:
-    base >= 4.14 && < 4.15,
-    containers,
-    array,
-    search-algorithms,
-    template-haskell,
-    my >= 0.0 && < 0.1,
-    regex-pcre-builtin
+    base ^>= 4.14,
+    containers ^>= 0.6.5,
+    array ^>= 0.5.4,
+    template-haskell ^>= 2.16,
+    regex-pcre-builtin ^>= 0.95.2,
+    search-algorithms ^>= 0.3.2,
+    my >= 0.0 && < 0.1
 
   extra-libraries: stdc++
