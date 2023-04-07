@@ -77,6 +77,6 @@ test-suite test
     template-haskell ^>= 2.16,
     regex-pcre-builtin ^>= 0.95.2,
     search-algorithms ^>= 0.3.2,
-    my >= 0.0 && < 0.1
+    my ^>= 0.0.1
 
   extra-libraries: stdc++
