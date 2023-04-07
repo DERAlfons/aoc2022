@@ -3,7 +3,6 @@
 module Main where
 
 import System.Environment (getArgs)
-import System.FilePath ((</>))
 import System.Exit (exitSuccess, exitFailure)
 
 import GenMains (genMains)
@@ -50,7 +49,7 @@ main = do -- IO
         (day, m) <- testMains
         return $ do -- IO
             (answer1, answer2) <- m
-            [check1, check2] <- lines <$> readFile (day </> "check.txt")
+            [check1, check2] <- lines <$> readFile (day ++ "/check.txt")
             putStrLn $ day ++ " part 1: " ++ if answer1 == check1 then "SUCCESS" else "FAILURE"
             putStrLn $ day ++ " part 2: " ++ if answer2 == check2 then "SUCCESS" else "FAILURE"
             return $ answer1 == check1 && answer2 == check2
